@@ -1,0 +1,57 @@
+{
+  "Comment": "My Sleep Tracker",
+  "StartAt": "GarminScraper",
+  "States": {
+    "GarminScraper": {
+      "Type": "Task",
+      "Resource": "${GarminScraperFunctionArn}",
+      "Next": "Parallel"
+    },
+    "Parallel": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "StoreDynamoDB",
+          "States": {
+            "StoreDynamoDB": {
+              "Type": "Task",
+              "Resource": "${StoreDynamoDBFunctionArn}",
+              "Parameters": {
+                "date.$": "$.date",
+                "totalSleepTime.$": "$.totalSleepTime",
+                "deepSleepTime.$": "$.deepSleepTime",
+                "shallowSleepTime.$": "$.shallowSleepTime",
+                "remSleepTime.$": "$.remSleepTime",
+                "awakeTime.$": "$.awakeTime"
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "NotifyLine",
+          "States": {
+            "NotifyLine": {
+              "Type": "Task",
+              "Resource": "${NotifyLineFunctionArn}",
+              "Parameters": {
+                "date.$": "$.date",
+                "totalSleepTime.$": "$.totalSleepTime",
+                "deepSleepTime.$": "$.deepSleepTime",
+                "shallowSleepTime.$": "$.shallowSleepTime",
+                "remSleepTime.$": "$.remSleepTime",
+                "awakeTime.$": "$.awakeTime"
+              },
+              "End": true
+            }
+          }
+        }
+      ],
+      "Next": "Final"
+    },
+    "Final": {
+      "Type": "Pass",
+      "End": true
+    }
+  }
+}

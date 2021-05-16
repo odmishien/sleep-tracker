@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sleep-tracker
+
+  Sample SAM Template for sleep-tracker
+Resources:
+  SleepTrackerStateMachine:
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
+    Properties:
+      DefinitionUri: statemachine/asl.json
+      DefinitionSubstitutions:
+        GarminScraperFunctionArn: !GetAtt GarminScraperFunction.Arn
+        StoreDynamoDBFunctionArn: !GetAtt StoreDynamoDBFunction.Arn
+        NotifyLineFunctionArn: !GetAtt NotifyLineFunction.Arn
+      Events:
+        HourlyTradingSchedule:
+          Type: Schedule
+          Properties:
+            Description: Schedule to run daily
+            Enabled: True # This schedule is disabled by default to avoid incurring charges.
+            Schedule: "cron(0 3 * * ? *)"
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref GarminScraperFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref StoreDynamoDBFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref NotifyLineFunction
+
+  GarminScraperFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/garmin-scraper/
+      Handler: index.handler
+      Runtime: nodejs14.x
+      Layers:
+        - "arn:aws:lambda:ap-northeast-1:711766021057:layer:puppetteer:2"
+      Environment:
+        Variables:
+          MAIL: !Ref Mail
+          PASSWORD: !Ref Password
+          TZ: !Ref TZ
+      Timeout: 30
+      MemorySize: 1600
+
+  StoreDynamoDBFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/store-dynamoDB/
+      Handler: index.handler
+      Runtime: nodejs14.x
+      Timeout: 10
+
+  NotifyLineFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/notify-line/
+      Handler: index.handler
+      Runtime: nodejs14.x
+      Environment:
+        Variables:
+          LINE_NOTIFY_TOKENS: !Ref LINENotifyTokens
+      Timeout: 10
+Parameters:
+  Mail:
+    Type: String
+  Password:
+    Type: String
+  TZ:
+    Type: String
+  LINENotifyTokens:
+    Type: String
