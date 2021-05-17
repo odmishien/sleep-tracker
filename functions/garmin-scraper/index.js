@@ -37,10 +37,7 @@ const login = async (page) => {
 
 const getSleep = async (page) => {
   const today = new Date().toISOString().substr(0, 10);
-  const dt = new Date();
-  dt.setDate(dt.getDate() - 1);
-  const yesterday = dt.toISOString().substr(0, 10);
-  await page.goto(`https://connect.garmin.com/modern/sleep/${yesterday}`);
+  await page.goto(`https://connect.garmin.com/modern/sleep/${today}`);
   await page.waitForTimeout(1000);
   const totalSleep = await page.$('.SleepGauge_mainText__1Jbim');
   const totalSleepText = await page.evaluate(
@@ -51,7 +48,7 @@ const getSleep = async (page) => {
     return list.map((data) => data.textContent);
   });
   return {
-    date: yesterday,
+    date: today,
     totalSleepTime: totalSleepText,
     deepSleepTime: sleepData[0],
     shallowSleepTime: sleepData[1],
