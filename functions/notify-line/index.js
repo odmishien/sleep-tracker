@@ -17,7 +17,7 @@ exports.handler = async (event) => {
       }),
     };
     try {
-      const res = await axios(params);
+      await axios(params);
     } catch (e) {
       console.log('error!');
       return {

@@ -41,7 +41,7 @@ Resources:
           MAIL: !Ref Mail
           PASSWORD: !Ref Password
           TZ: !Ref TZ
-      Timeout: 30
+      Timeout: 60
       MemorySize: 1600
 
   StoreDynamoDBFunction:
